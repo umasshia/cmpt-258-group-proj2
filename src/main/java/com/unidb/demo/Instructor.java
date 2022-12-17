@@ -48,6 +48,6 @@ public class Instructor {
 
     @Override
     public String toString() {
-        return "Instructor [id = " + id + ", name = " + name + ", department = " + dept + "]";
+        return String.format("| %-5s | %-16s | %-10s |",id, name, dept);
     }
 }
