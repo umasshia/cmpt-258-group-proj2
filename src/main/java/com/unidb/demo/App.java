@@ -5,7 +5,6 @@ import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
 import java.util.Scanner;
 
-import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
@@ -47,28 +46,28 @@ public class App {
 				case "3":
 					System.out.print("\nEnter the instructor ID: ");
 					id = input.nextLine();
-					// if (instructorExists(s, id)) {
-					// 	System.out.println("\nInstructor ID already exists in the database.");
-					// 	break;
-					// }
+					if (instructorExists(cfg, id)) {
+						System.out.println("\nInstructor ID already exists in the database.");
+						break;
+					}
 					System.out.print("Enter the instructor's name: ");
 					String name = input.nextLine();
 					System.out.print("Enter the affilitated department name: ");
 					dept = input.nextLine();
-					// if (!departmentExists(s, dept)) {
-					// 	System.out.println(
-					// 			"\nThe department does not exist and hence the instructor record cannot be added to the database.");
-					// 	break;
-					// }
+					if (!departmentExists(cfg, dept)) {
+						System.out.println(
+								"\nThe department does not exist and hence the instructor record cannot be added to the database.");
+						break;
+					}
 					addInstructor(cfg, id, name, dept);
 					break;
 				case "4":
 					System.out.print("\nEnter the department name: ");
 					dept = input.nextLine();
-					// if (departmentExists(s, dept)) {
-					// 	System.out.println("\nDepartment name already exists in the database.");
-					// 	break;
-					// }
+					if (departmentExists(cfg, dept)) {
+						System.out.println("\nDepartment name already exists in the database.");
+						break;
+					}
 					System.out.print("Enter the department location: ");
 					String location = input.nextLine();
 					System.out.print("Enter the department budget: ");
@@ -78,11 +77,21 @@ public class App {
 				case "5":
 					System.out.print("\nEnter the instructor ID: ");
 					id = input.nextLine();
+					if (!instructorExists(cfg, id)) {
+						System.out.println(
+								"\nThe instructor does not exist.");
+						break;
+					}
 					deleteInstructor(cfg, id);
 					break;
 				case "6":
 					System.out.println("\nEnter the department name: ");
 					dept = input.nextLine();
+					if (!departmentExists(cfg, dept)) {
+						System.out.println(
+								"\nThe department does not exist.");
+						break;
+					}
 					deleteDepartment(cfg, dept);
 					break;
 				case "7":
@@ -107,22 +116,29 @@ public class App {
     public static void getInstructorInfo(Configuration cfg, String id) {
 		Session s = cfg.buildSessionFactory().openSession();
         Instructor ins = s.get(Instructor.class, id);
-		System.out.println("\n\n" + ins.toString());
+		if(ins != null)
+			System.out.println("\n\n" + ins.toString());
+		else	
+			System.out.println("Instructor does not exist!");
     }
 
     public static void getDepartmentInfo(Configuration cfg, String dept) {
 		Session s = cfg.buildSessionFactory().openSession();
 		Department dep = s.get(Department.class, dept);
-		CriteriaBuilder b = s.getCriteriaBuilder();
-		CriteriaQuery<Instructor> cr = b.createQuery(Instructor.class);
-		Root<Instructor> root = cr.from(Instructor.class);
-		cr.select(root);
-		cr.where(b.equal(root.get("dept"), dept));
-		List<Instructor> insList = s.createQuery(cr).getResultList();
-		System.out.println("\n\n" + dep.toString());
-		System.out.print("\n\nMembers of the department: \n");
-		for(Instructor ins : insList){
-			System.out.println("\n" + "[ id = " + ins.getId() + ", name = " + ins.getName() + "]");
+		if(dep != null){
+			CriteriaBuilder b = s.getCriteriaBuilder();
+			CriteriaQuery<Instructor> cr = b.createQuery(Instructor.class);
+			Root<Instructor> root = cr.from(Instructor.class);
+			cr.select(root);
+			cr.where(b.equal(root.get("dept"), dept));
+			List<Instructor> insList = s.createQuery(cr).getResultList();
+			System.out.println("\n\n" + dep.toString());
+			System.out.print("\n\nMembers of the department: \n");
+			for(Instructor ins : insList){
+				System.out.println("\n" + "[ id = " + ins.getId() + ", name = " + ins.getName() + "]");
+			}
+		}else{
+			System.out.println("\nDepartment does not exist!");
 		}
     }
 
@@ -165,6 +181,18 @@ public class App {
 		s.remove(dep);
 		s.getTransaction().commit();
 		s.close();
+	}
+
+	public static boolean instructorExists(Configuration cfg, String id){
+		Session s = cfg.buildSessionFactory().openSession();
+        Instructor ins = s.get(Instructor.class, id);
+		return ins != null;
+	}
+
+	public static boolean departmentExists(Configuration cfg, String dept){
+		Session s = cfg.buildSessionFactory().openSession();
+        Department dep = s.get(Department.class, dept);
+		return dep != null;
 	}
 	
 	public static void printTable(Configuration cfg, String table) {
