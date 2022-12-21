@@ -14,9 +14,9 @@ For further reference, please consider the following sections:
 * [Spring Boot DevTools](https://docs.spring.io/spring-boot/docs/3.0.0/reference/htmlsingle/#using.devtools)
 
 
-# Terminal based university database using Maven and Hibernate ORM
+### Terminal based university database using Maven and Hibernate ORM
 
-# Please create the following database before executing
+Please create the following database before executing
 
 <code> 
 

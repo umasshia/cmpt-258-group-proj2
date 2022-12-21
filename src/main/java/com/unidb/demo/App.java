@@ -116,8 +116,14 @@ public class App {
     public static void getInstructorInfo(Configuration cfg, String id) {
 		Session s = cfg.buildSessionFactory().openSession();
         Instructor ins = s.get(Instructor.class, id);
-		if(ins != null)
-			System.out.println("\n\n" + ins.toString());
+		if (ins != null) {
+			System.out.print("\n\nInstructor info: \n");
+			System.out.printf("+-------+------------------+------------+%n");
+			System.out.printf("| %-5s | %-16s | %-10s |%n", "ID", "NAME", "DEPARTMENT");
+			System.out.printf("+-------+------------------+------------+%n");
+			System.out.print(ins.toString());
+			System.out.printf("%n+-------+------------------+------------+");
+		}
 		else	
 			System.out.println("Instructor does not exist!");
     }
@@ -132,11 +138,20 @@ public class App {
 			cr.select(root);
 			cr.where(b.equal(root.get("dept"), dept));
 			List<Instructor> insList = s.createQuery(cr).getResultList();
-			System.out.println("\n\n" + dep.toString());
+			System.out.print("\n\nDepartment info: \n");
+			System.out.printf("+------------+------------+------------+%n");
+			System.out.printf("| %-10s | %-10s | %-10s |%n", "DEPARTMENT", "LOCATION", "BUDGET");
+			System.out.printf("+------------+------------+------------+%n");
+			System.out.print(dep.toString());
+			System.out.printf("%n+------------+------------+------------+");
 			System.out.print("\n\nMembers of the department: \n");
-			for(Instructor ins : insList){
-				System.out.println("\n" + "[ id = " + ins.getId() + ", name = " + ins.getName() + "]");
+			System.out.printf("+-------+------------------+%n");
+			System.out.printf("| %-5s | %-16s |%n", "ID", "NAME");
+			System.out.printf("+-------+------------------+%n");
+			for (Instructor ins : insList) {
+				System.out.printf("| %-5s | %-16s |%n", ins.getId(), ins.getName());
 			}
+			System.out.printf("+-------+------------------+");
 		}else{
 			System.out.println("\nDepartment does not exist!");
 		}
@@ -203,19 +218,27 @@ public class App {
 			Root<Instructor> root = cr.from(Instructor.class);
 			cr.select(root);
 			List<Instructor> insList = s.createQuery(cr).getResultList();
-			System.out.println("\nInstructor List:");
-				for (Instructor ins : insList) {
-					System.out.println("\n" + ins.toString());
-				}
+			System.out.println("\nInstructors:");
+			System.out.printf("+-------+------------------+------------+%n");
+			System.out.printf("| %-5s | %-16s | %-10s |%n", "ID", "NAME", "DEPARTMENT");
+			System.out.printf("+-------+------------------+------------+");
+			for (Instructor ins : insList) {
+					System.out.print("\n" + ins.toString());
+			}
+			System.out.printf("%n+-------+------------------+------------+");
 		} else {
 			CriteriaQuery<Department> cr = b.createQuery(Department.class);
 			Root<Department> root = cr.from(Department.class);
 			cr.select(root);
 			List<Department> depList = s.createQuery(cr).getResultList();
-			System.out.println("\nDepartment List:");
-				for (Department dep : depList) {
-					System.out.println("\n" + dep.toString());
-				}
+			System.out.println("\nDepartments:");
+			System.out.printf("+------------+------------+------------+%n");
+			System.out.printf("| %-10s | %-10s | %-10s |%n", "DEPARTMENT", "LOCATION", "BUDGET");
+			System.out.printf("+------------+------------+------------+");
+			for (Department dep : depList) {
+				System.out.print("\n" + dep.toString());
+			}
+			System.out.printf("%n+------------+------------+------------+");
 		}
 		s.close();
 	}
