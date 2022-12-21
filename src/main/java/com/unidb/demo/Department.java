@@ -49,6 +49,6 @@ public class Department {
 
     @Override
     public String toString() {
-        return String.format("| %-10s | %-10s | %-10s |", dept, location, budget);
+        return "NAME = " + dept + ", LOCATION = " + location + ", BUDGET =" + budget;
     }
 }

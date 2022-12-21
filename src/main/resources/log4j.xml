@@ -1,0 +1,32 @@
+<log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j/" debug="true">
+<appender name="ASYNC_APPENDER" class="org.apache.log4j.AsyncAppender">
+<appender name="FILE" class="org.apache.log4j.DailyRollingFileAppender">
+<param name="File" value="citimortgage" />
+<param name="DatePattern" value="'.'yyyy-MM-dd" />
+<layout class="org.apache.log4j.PatternLayout">
+<param name="ConversionPattern" value="[%d] %-5p %c - %m%n" />
+</layout>
+</appender>
+<logger name="citimortgage" additivity="true">
+<level value="debug" />
+</logger>
+<logger name="com.citigroup.rel.common.webservice" additivity="false">
+<level value="debug" />
+</logger>
+<!-- Coding change for R35937 Local-->
+<logger name = "org.apache.velocity" additivity = "false" >
+<level value = "debug" />
+<appender-ref ref = "ASYNC" />
+</logger >
+
+<!-- Enable this if you want to see hibernate logging
+<logger name="org.hibernate">
+<level value="INFO" />
+</logger>
+-->
+<root>
+<priority value="ERROR"/>
+<appender-ref ref="ASYNC_APPENDER"/>
+<appender-ref ref="FILE"/>
+</root>
+</log4j:configuration>

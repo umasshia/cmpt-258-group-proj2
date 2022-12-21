@@ -1,22 +1,17 @@
 package com.unidb.demo;
 
 import java.util.List;
-import org.hibernate.Session;
-import org.hibernate.cfg.Configuration;
 import java.util.Scanner;
 
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Root;
-
-import java.io.IOException;
+import org.hibernate.Session;
+import org.hibernate.cfg.Configuration;
 
 public class App {
+	public static final Scanner input = new Scanner(System.in);
     // main method
-	public static void main(String[] args) throws IOException {
+	public static void main(String[] args) {
 		Configuration cfg = new Configuration();
 		cfg.configure("hibernate.cfg.xml");
-        Scanner input = new Scanner(System.in);
         // menu, with all the choices
 		while (true) {
 			System.out.println(
@@ -30,79 +25,32 @@ public class App {
 			System.out.println("7. Display all instructors.");
 			System.out.println("8. Display all departments.");
 			System.out.println("9. Exit");
-			System.out.print("\nEnter your selection: ");
-			String choice = input.nextLine();
-			switch (choice) {
+			switch (getInput("\n Enter your selection: ")) {
 				case "1":
-					System.out.print("\nEnter the instructor ID: ");
-					String id = input.nextLine();
-					getInstructorInfo(cfg, id);
+					getInstructorInfo(cfg, getInput("\nEnter the instructor ID: "));
 					break;
 				case "2":
-					System.out.print("\nPlease enter the department name: ");
-					String dept = input.nextLine();
-					getDepartmentInfo(cfg, dept);
+					getDepartmentInfo(cfg, getInput("\nEnter the department name: "));
 					break;
 				case "3":
-					System.out.print("\nEnter the instructor ID: ");
-					id = input.nextLine();
-					if (instructorExists(cfg, id)) {
-						System.out.println("\nInstructor ID already exists in the database.");
-						break;
-					}
-					System.out.print("Enter the instructor's name: ");
-					String name = input.nextLine();
-					System.out.print("Enter the affilitated department name: ");
-					dept = input.nextLine();
-					if (!departmentExists(cfg, dept)) {
-						System.out.println(
-								"\nThe department does not exist and hence the instructor record cannot be added to the database.");
-						break;
-					}
-					addInstructor(cfg, id, name, dept);
+					addInstructor(cfg);
 					break;
 				case "4":
-					System.out.print("\nEnter the department name: ");
-					dept = input.nextLine();
-					if (departmentExists(cfg, dept)) {
-						System.out.println("\nDepartment name already exists in the database.");
-						break;
-					}
-					System.out.print("Enter the department location: ");
-					String location = input.nextLine();
-					System.out.print("Enter the department budget: ");
-					String budget = input.nextLine();
-					addDepartment(cfg, dept, location, budget);
-					break;
+					addDepartment(cfg);
 				case "5":
-					System.out.print("\nEnter the instructor ID: ");
-					id = input.nextLine();
-					if (!instructorExists(cfg, id)) {
-						System.out.println(
-								"\nThe instructor does not exist.");
-						break;
-					}
-					deleteInstructor(cfg, id);
+					deleteInstructor(cfg, getInput("\nEnter the instructor ID: "));
 					break;
 				case "6":
-					System.out.println("\nEnter the department name: ");
-					dept = input.nextLine();
-					if (!departmentExists(cfg, dept)) {
-						System.out.println(
-								"\nThe department does not exist.");
-						break;
-					}
-					deleteDepartment(cfg, dept);
+					deleteDepartment(cfg, getInput("\nEnter the department name: "));
 					break;
 				case "7":
-					printTable(cfg, "instructor");
+					printTable(cfg, "from Instructor");
 					break;
 				case "8":
-					printTable(cfg, "department");
+					printTable(cfg, "from Department");
 					break;
 				case "9":
 					System.out.println("\nThank you and goodbye!");
-					input.close();
 					return;
 				default:
 					System.out.println("\nInvalid input, try again:");
@@ -111,135 +59,119 @@ public class App {
 		}
     }
 
-
+	public static String getInput(String message) {
+		System.out.println(message);
+		return input.nextLine();
+	}
     // methods that get info from the tables and put it out on the screen
     public static void getInstructorInfo(Configuration cfg, String id) {
-		Session s = cfg.buildSessionFactory().openSession();
-        Instructor ins = s.get(Instructor.class, id);
+        Instructor ins = openSsn(cfg).get(Instructor.class, id);
 		if (ins != null) {
-			System.out.print("\n\nInstructor info: \n");
-			System.out.printf("+-------+------------------+------------+%n");
-			System.out.printf("| %-5s | %-16s | %-10s |%n", "ID", "NAME", "DEPARTMENT");
-			System.out.printf("+-------+------------------+------------+%n");
-			System.out.print(ins.toString());
-			System.out.printf("%n+-------+------------------+------------+");
+			System.out.println("\n" + ins.toString());
 		}
 		else	
 			System.out.println("Instructor does not exist!");
     }
 
     public static void getDepartmentInfo(Configuration cfg, String dept) {
-		Session s = cfg.buildSessionFactory().openSession();
-		Department dep = s.get(Department.class, dept);
-		if(dep != null){
-			CriteriaBuilder b = s.getCriteriaBuilder();
-			CriteriaQuery<Instructor> cr = b.createQuery(Instructor.class);
-			Root<Instructor> root = cr.from(Instructor.class);
-			cr.select(root);
-			cr.where(b.equal(root.get("dept"), dept));
-			List<Instructor> insList = s.createQuery(cr).getResultList();
-			System.out.print("\n\nDepartment info: \n");
-			System.out.printf("+------------+------------+------------+%n");
-			System.out.printf("| %-10s | %-10s | %-10s |%n", "DEPARTMENT", "LOCATION", "BUDGET");
-			System.out.printf("+------------+------------+------------+%n");
-			System.out.print(dep.toString());
-			System.out.printf("%n+------------+------------+------------+");
-			System.out.print("\n\nMembers of the department: \n");
-			System.out.printf("+-------+------------------+%n");
-			System.out.printf("| %-5s | %-16s |%n", "ID", "NAME");
-			System.out.printf("+-------+------------------+%n");
-			for (Instructor ins : insList) {
-				System.out.printf("| %-5s | %-16s |%n", ins.getId(), ins.getName());
-			}
-			System.out.printf("+-------+------------------+");
-		}else{
-			System.out.println("\nDepartment does not exist!");
-		}
+		Department dep = openSsn(cfg).get(Department.class, dept);
+		System.out.println(dep.toString());
+		printTable(cfg, "select i from Instructor i where dept ='" + dept + "'");
     }
-
     // methods to add and delete instructors from tables and files
-    public static void addInstructor(Configuration cfg, String id, String name, String dept)
-			throws IOException {
-		Session s = cfg.buildSessionFactory().openSession();
-		Instructor ins = new Instructor(id, name, dept);
-		s.getTransaction().begin();  
-		s.persist(ins);
-		s.getTransaction().commit();
-		s.close();
+	public static void addInstructor(Configuration cfg) {
+		Instructor instructor = new Instructor(getInput("\nEnter the instructor ID: "), 
+		getInput("Enter the affiliated department name: "), getInput("Enter the instructor's name: "));
+		if(validateInstructorEntry(cfg, instructor)){
+			addTransaction(openSsn(cfg), instructor);
+		}		
     }
 
-    public static void addDepartment(Configuration cfg, String dept, String location, String budget)
-	throws IOException {
-		Session s = cfg.buildSessionFactory().openSession();
-		Department dep = new Department(dept, location, budget);
-		s.getTransaction().begin();  
-		s.persist(dep);
-		s.getTransaction().commit(); 
-		s.close(); 
-}
+	public static void addDepartment(Configuration cfg) {
+		Department department = new Department(getInput("Enter the affiliated department name: "), 
+		getInput("Enter the department location: "), getInput("Enter the department budget: "));
+		if (validateDepartmentEntry(cfg, department)) {
+			addTransaction(openSsn(cfg), department);
+		}			
+	}	
 
-    public static void deleteInstructor(Configuration cfg, String id)
-			throws IOException {
-		Session s = cfg.buildSessionFactory().openSession();
-		Instructor ins = s.get(Instructor.class, id);
-		s.getTransaction().begin();
-		s.remove(ins);
-		s.getTransaction().commit();
-		s.close();
+    public static void deleteInstructor(Configuration cfg, String id) {
+		rmTransaction(openSsn(cfg), id, "instructor");
     }
 
-    public static void deleteDepartment(Configuration cfg, String dept)
-			throws IOException {
-		Session s = cfg.buildSessionFactory().openSession();
-		Department dep = s.get(Department.class, dept);
-		s.getTransaction().begin();
-		s.remove(dep);
-		s.getTransaction().commit();
-		s.close();
+    public static void deleteDepartment(Configuration cfg, String dept) {
+		rmTransaction(openSsn(cfg), dept, "department");
 	}
 
 	public static boolean instructorExists(Configuration cfg, String id){
-		Session s = cfg.buildSessionFactory().openSession();
-        Instructor ins = s.get(Instructor.class, id);
-		return ins != null;
+		return openSsn(cfg).get(Instructor.class, id) != null;
 	}
 
 	public static boolean departmentExists(Configuration cfg, String dept){
-		Session s = cfg.buildSessionFactory().openSession();
-        Department dep = s.get(Department.class, dept);
-		return dep != null;
+		return openSsn(cfg).get(Department.class, dept) != null;
 	}
 	
-	public static void printTable(Configuration cfg, String table) {
+	public static Session openSsn(Configuration cfg) {
 		Session s = cfg.buildSessionFactory().openSession();
-		CriteriaBuilder b = s.getCriteriaBuilder();
-		if (table == "instructor") {
-			CriteriaQuery<Instructor> cr = b.createQuery(Instructor.class);
-			Root<Instructor> root = cr.from(Instructor.class);
-			cr.select(root);
-			List<Instructor> insList = s.createQuery(cr).getResultList();
-			System.out.println("\nInstructors:");
-			System.out.printf("+-------+------------------+------------+%n");
-			System.out.printf("| %-5s | %-16s | %-10s |%n", "ID", "NAME", "DEPARTMENT");
-			System.out.printf("+-------+------------------+------------+");
-			for (Instructor ins : insList) {
-					System.out.print("\n" + ins.toString());
+		return s;
+	}
+
+	public static void rmTransaction(Session s, String idValue, String table) {
+		s.getTransaction().begin();
+		try {
+			if (table == "instructor") {
+				s.remove(s.get(Instructor.class, idValue));
+			} else {
+				s.remove(s.get(Department.class, idValue));
 			}
-			System.out.printf("%n+-------+------------------+------------+");
-		} else {
-			CriteriaQuery<Department> cr = b.createQuery(Department.class);
-			Root<Department> root = cr.from(Department.class);
-			cr.select(root);
-			List<Department> depList = s.createQuery(cr).getResultList();
-			System.out.println("\nDepartments:");
-			System.out.printf("+------------+------------+------------+%n");
-			System.out.printf("| %-10s | %-10s | %-10s |%n", "DEPARTMENT", "LOCATION", "BUDGET");
-			System.out.printf("+------------+------------+------------+");
-			for (Department dep : depList) {
-				System.out.print("\n" + dep.toString());
-			}
-			System.out.printf("%n+------------+------------+------------+");
+		} catch (IllegalArgumentException e) {
+			System.out.println("The " + table + " does not exist.");
 		}
+		commitTransaction(s);
+	}
+	
+	public static void addTransaction(Session s, Object obj) {
+		s.getTransaction().begin();
+		s.persist(obj);
+		commitTransaction(s);
+	}
+
+	public static void commitTransaction(Session s) {
+		s.getTransaction().commit();
 		s.close();
+	}
+
+	public static boolean validateInstructorEntry(Configuration cfg, Instructor instructor) {
+		if (instructorExists(cfg, instructor.getId())) {
+			System.out.println("\nInstructor ID already exists in the database.");
+			return false;
+		}
+
+		else if (instructor.getId().length() != 4) {
+			System.out.println("\nPlease enter a valid ID value.");
+			return false;
+		}
+
+		if (!departmentExists(cfg, instructor.getDept())) {
+			System.out.println("\nThe department does not exist.");
+			return false;
+		}
+		return true;
+	}
+	
+	public static boolean validateDepartmentEntry(Configuration cfg, Department dept) {
+		if (departmentExists(cfg, dept.getDept())) {
+			System.out.println("\nDepartment name already exists in the database.");
+			return false;
+		}
+		return true;
+	}
+
+	public static void printTable(Configuration cfg, String q) {
+		@SuppressWarnings("unchecked")
+		List<Object> list = openSsn(cfg).createQuery(q).list();
+		for(Object entry : list){
+			System.out.println(entry.toString());
+		}
 	}
 }
